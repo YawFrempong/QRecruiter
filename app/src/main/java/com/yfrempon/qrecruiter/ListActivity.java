@@ -112,7 +112,7 @@ public class ListActivity extends AppCompatActivity {
         });
     }
     
-    //show action bar when delete is selected
+    //show action bar when 'delete' is selected
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
         //initialize action bar
         @Override
@@ -121,6 +121,7 @@ public class ListActivity extends AppCompatActivity {
             mode.setTitle("Delete");
             return true;
         }
+        
         //not used
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
@@ -153,7 +154,7 @@ public class ListActivity extends AppCompatActivity {
         }
     };
     
-    //show action bar when rename is selected
+    //show action bar when 'rename' is selected
     private ActionMode.Callback mActionModeCallback2 = new ActionMode.Callback() {
         //initialize action bar
         @Override
@@ -387,7 +388,7 @@ public class ListActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu){
         MenuInflater inflater = getMenuInflater();
         
-        //fix for search UI bug
+        //search UI bug fix
         if(search_skip_flag){
             inflater.inflate(R.menu.example_menu_2, menu);
             search_skip_flag = false;
@@ -440,12 +441,15 @@ public class ListActivity extends AppCompatActivity {
             case R.id.action_menu_item_1_sub_1:     //sort A-Z
                 sortList(0);
                 return true;
+                
             case R.id.action_menu_item_1_sub_2:     //sort Z-A
                 sortList(1);
                 return true;
+                
             case R.id.action_menu_item_1_point_5:   //add
                 showAddItemDialog(ListActivity.this);
                 return true;
+                
             case R.id.action_menu_item_2:           //rename
                 if(mActionMode != null){
                     return false;
@@ -455,6 +459,7 @@ public class ListActivity extends AppCompatActivity {
                 editSelected = true;
                 mListView.setAdapter(adapter);
                 return true;
+                
             case R.id.action_menu_item_2_point_5:   //delete event
                 if(mActionMode != null){
                     return false;
@@ -464,12 +469,14 @@ public class ListActivity extends AppCompatActivity {
                 deleteSelected = true;
                 mListView.setAdapter(adapter);
                 return true;
+                
             case  R.id.action_menu_item_3:          //logout
                 onLogoutPressed = true;
                 Intent intToMain = new Intent(ListActivity.this, LoginActivity.class);
                 startActivity(intToMain);
                 searchItem.collapseActionView();
                 return true;
+                
             case R.id.action_menu_item_4:           //delete account
                 showDeleteAccountDialog(ListActivity.this);
         }
@@ -674,7 +681,7 @@ public class ListActivity extends AppCompatActivity {
         finish();
     }
     
-    //get current activity context when activity is again
+    //get current activity context when activity is active again
     @Override
     protected void onResume(){
         super.onResume();
