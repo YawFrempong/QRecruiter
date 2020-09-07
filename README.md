@@ -5,6 +5,7 @@
   - export data to csv
   
 #### QRecruiter is available for download on Android devices: [Google Play Store](https://play.google.com/store/apps/details?id=com.yfrempon.qrecruiter)
+ <img src="app_screenshots/play_store.PNG" width="500"> <br />
 #### App demo: [YouTube](https://www.youtube.com/watch?v=ozDY7Fv5bb0)
 ![ezgif com-video-to-gif](https://user-images.githubusercontent.com/23369041/92349822-305ea300-f0a5-11ea-8cb9-2d93f29fd4b5.gif)
 
