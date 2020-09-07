@@ -11,3 +11,10 @@
 #### Source code directory: [app/src/main/java/com/yfrempon/qrecruiter/](https://github.com/YawFrempong/QRecruiter/tree/master/app/src/main/java/com/yfrempon/qrecruiter)
 
 #### Screenshots:
+<img src="app_screenshots/login.png" width="200"> <img src="app_screenshots/signup.png" width="200"> <img src="app_screenshots/events.png" width="200"> <img src="app_screenshots/qr_1.png" width="200"> <img src="app_screenshots/qr_2.png" width="200"> <img src="app_screenshots/profiles.png" width="200"> <img src="app_screenshots/excel.png" width="200">
+
+
+<img src="app_screenshots/firebase.png" width="200">
+
+Enjoy !!!
+~ Yaw
