@@ -87,6 +87,7 @@ public class QRActivity extends AppCompatActivity implements ZXingScannerView.Re
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private void togglePlayButton(){
         paused = !paused;
+        
         if(paused){
             scannerView.stopCameraPreview();
             btn_img.setImageDrawable(getResources().getDrawable(R.drawable.avd_pause_to_play));
@@ -94,6 +95,7 @@ public class QRActivity extends AppCompatActivity implements ZXingScannerView.Re
             scannerView.resumeCameraPreview(QRActivity.this);
             btn_img.setImageDrawable(getResources().getDrawable(R.drawable.avd_play_to_pause));
         }
+        
         Drawable drawable = btn_img.getDrawable();
 
         if (drawable instanceof AnimatedVectorDrawableCompat) {
@@ -116,6 +118,7 @@ public class QRActivity extends AppCompatActivity implements ZXingScannerView.Re
             scannerView.resumeCameraPreview(QRActivity.this);
             btn_img.setImageDrawable(getResources().getDrawable(R.drawable.avd_play_to_pause));
         }
+        
         paused = val;
         Drawable drawable = btn_img.getDrawable();
 
@@ -326,6 +329,7 @@ public class QRActivity extends AppCompatActivity implements ZXingScannerView.Re
     @Override
     public void onResume() {
         super.onResume();
+        
         int currentapiVersion = android.os.Build.VERSION.SDK_INT;
         if (currentapiVersion >= android.os.Build.VERSION_CODES.M) {
             if (checkPermission()) {
@@ -339,6 +343,7 @@ public class QRActivity extends AppCompatActivity implements ZXingScannerView.Re
                 requestPermission();
             }
         }
+        
         btn_img = findViewById(R.id.pause_btn_img);
         btn_img.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -352,6 +357,7 @@ public class QRActivity extends AppCompatActivity implements ZXingScannerView.Re
     @Override
     public void onDestroy() {
         super.onDestroy();
+        
         scannerView.stopCamera();
     }
 }
