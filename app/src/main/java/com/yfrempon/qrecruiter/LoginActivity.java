@@ -106,6 +106,7 @@ public class LoginActivity extends AppCompatActivity {
             .build();
         Twitter.initialize(twitterConfig);
         SessionManager<TwitterSession> sessionManager = TwitterCore.getInstance().getSessionManager();
+        
         if (sessionManager.getActiveSession() != null){
             sessionManager.clearActiveSession();
         }
@@ -354,6 +355,7 @@ public class LoginActivity extends AppCompatActivity {
     //custom function for closing the keyboard
     private void closeKeyboard() {
         View view = this.getCurrentFocus();
+        
         if(view != null){
             InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
@@ -418,11 +420,13 @@ public class LoginActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 Map<String, Object> emailList;
                 emailList = (Map<String, Object>) dataSnapshot.getValue();
+                
                 if(emailList == null){
                     beginRecovery2(emailInput);
                 } else {
                     if(emailList.containsKey(cleanEmailInput)){
                         String email_provider = emailList.get(cleanEmailInput).toString();
+                        
                         if(email_provider.equals("Firebase")){
                             beginRecovery2(emailInput);
                         } else {
@@ -491,6 +495,7 @@ public class LoginActivity extends AppCompatActivity {
                 } else {
                     if(emailList.containsKey(clean_email)){
                         String email_provider = emailList.get(clean_email).toString();
+                        
                         if(email_provider.equals("Google")){
                             firebaseAuthWithGoogle2(credential);
                         } else {
@@ -623,6 +628,7 @@ public class LoginActivity extends AppCompatActivity {
                     if (!task.isSuccessful()){
                         Toast.makeText(LoginActivity.this, "Failed to Sign-In with Twitter: " + task.getException().getMessage(), Toast.LENGTH_LONG).show();
                         SessionManager<TwitterSession> sessionManager = TwitterCore.getInstance().getSessionManager();
+                        
                         if (sessionManager.getActiveSession() != null){
                             sessionManager.clearActiveSession();
                         }
@@ -729,6 +735,7 @@ public class LoginActivity extends AppCompatActivity {
         else if(googleButtonClicked){
             googleButtonClicked = false;
             super.onActivityResult(requestCode, resultCode, data);
+            
             if (requestCode == RC_SIGN_IN) {
                 Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
                 try {
