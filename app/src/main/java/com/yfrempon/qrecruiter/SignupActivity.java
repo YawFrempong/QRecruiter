@@ -46,7 +46,9 @@ public class SignupActivity extends AppCompatActivity {
             public void onClick(View v) {
                 final String email = emailId.getText().toString();
                 final String pwd = password.getEditText().getText().toString();
+                
                 closeKeyboard();
+                
                 if(email.isEmpty() && pwd.isEmpty()){
                     Toast.makeText(SignupActivity.this,"Fields Are Empty!",Toast.LENGTH_SHORT).show();
                 }
@@ -111,6 +113,7 @@ public class SignupActivity extends AppCompatActivity {
     //custom function for closing the keyboard
     private void closeKeyboard() {
         View view = this.getCurrentFocus();
+        
         if(view != null){
             InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
