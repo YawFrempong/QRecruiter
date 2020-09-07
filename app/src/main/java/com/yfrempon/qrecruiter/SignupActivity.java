@@ -34,9 +34,13 @@ public class SignupActivity extends AppCompatActivity {
         setContentView(R.layout.activity_signup);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         setTitle("Sign Up");
+        
+        //store activity content in variables
         emailId = findViewById(R.id.editText);
         password = findViewById(R.id.editText2);
         btnSignUp = findViewById(R.id.button2);
+        
+        //handle sign-up for a Firebase account(make sure email and password are valid, encode illegal characters, verify account doesn't already exist)
         btnSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -103,6 +107,8 @@ public class SignupActivity extends AppCompatActivity {
             }
         });
     }
+    
+    //custom function for closing the keyboard
     private void closeKeyboard() {
         View view = this.getCurrentFocus();
         if(view != null){
@@ -110,6 +116,8 @@ public class SignupActivity extends AppCompatActivity {
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
+    
+    //back button on toolbar pressed
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
