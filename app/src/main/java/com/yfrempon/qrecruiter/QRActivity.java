@@ -137,6 +137,7 @@ public class QRActivity extends AppCompatActivity implements ZXingScannerView.Re
             case REQUEST_CAMERA:
                 if (grantResults.length > 0) {
                     boolean cameraAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
+                    
                     if (cameraAccepted){
                         Toast.makeText(getApplicationContext(), "Permission Granted.", Toast.LENGTH_SHORT).show();
                     } else {
@@ -261,6 +262,7 @@ public class QRActivity extends AppCompatActivity implements ZXingScannerView.Re
             @Override
             public void afterTextChanged(Editable s) {
                 alert1.setMessage(Html.fromHtml("<font color='#000000'>Add a name: </font>"));
+                
                 if (TextUtils.isEmpty(s)) {
                     alert1.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
                     return;
@@ -269,17 +271,20 @@ public class QRActivity extends AppCompatActivity implements ZXingScannerView.Re
                     String alphanum = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890 ";
                     String currentVal = taskEditText.getText().toString();
                     int currentLen = currentVal.length();
+                    
                     if(currentVal.contains(".")){
                         currentVal = currentVal.replace(".","");
                         taskEditText.setText(currentVal);
                         taskEditText.setSelection(taskEditText.getText().length());
                         return;
                     }
+                    
                     if ((alphanum.indexOf(currentVal.charAt(currentLen - 1)) == -1) || isWhitespace(currentVal.charAt(0)) || currentVal.contains("  ")) {
                         taskEditText.setText(currentVal.substring(0, currentVal.length() - 1));
                         taskEditText.setSelection(taskEditText.getText().length());
                         return;
                     }
+                    
                     if(EventActivity.name2link.containsValue(myResult) || profiles.contains(taskEditText.getText().toString()) || profiles.contains(taskEditText.getText().toString().trim()) || taskEditText.getText().toString().length() > 25){
                         if(EventActivity.name2link.containsValue(myResult)){
                             String localKeyVal = "";
@@ -331,6 +336,7 @@ public class QRActivity extends AppCompatActivity implements ZXingScannerView.Re
         super.onResume();
         
         int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+        
         if (currentapiVersion >= android.os.Build.VERSION_CODES.M) {
             if (checkPermission()) {
                 if(scannerView == null) {
