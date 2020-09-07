@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item android:id="@+id/action_search"
+        android:icon="@drawable/ic_search"
+        android:title="Search"
+        app:showAsAction="ifRoom|collapseActionView"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"/>
+
+    <item android:id="@+id/action_menu_item_1_parent"
+        android:title="Sort"
+        app:showAsAction="never">
+        <menu>
+            <item android:id="@+id/action_menu_item_1_sub_1"
+                android:title="Name(A - Z)"/>
+            <item android:id="@+id/action_menu_item_1_sub_2"
+                android:title="Name(Z - A)"/>
+        </menu>
+    </item>
+    <item android:id="@+id/action_menu_item_2_parent"
+        android:title="Edit"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/action_menu_item_1_point_5"
+                android:title="Add"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_menu_item_2"
+                android:title="Rename"
+                app:showAsAction="never" />
+            <item
+                android:id="@+id/action_menu_item_2_point_5"
+                android:title="Delete"
+                app:showAsAction="never" />
+        </menu>
+    </item>
+    <item
+        android:id="@+id/action_menu_item_3"
+        android:title="Export"
+        app:showAsAction="never" />
+    <item android:id="@+id/action_menu_item_3_parent"
+        android:title="Account"
+        app:showAsAction="never">
+        <menu>
+            <item android:id="@+id/action_menu_item_3_point_5"
+                android:title="Logout"
+                app:showAsAction="never" />
+            <item android:id="@+id/action_menu_item_4"
+                android:title="Delete Account"
+                app:showAsAction="never" />
+        </menu>
+    </item>
+</menu>

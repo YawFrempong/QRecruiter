@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">QRecruiter</string>
+    <string name="facebook_app_id"><!--removed---></string>
+    <string name="fb_login_protocol_scheme"><!--removed---></string>
+    <string name="twitter_consumer_key" translatable="false"><!--removed---></string>
+    <string name="twitter_consumer_secret" translatable="false"><!--removed---></string>
+</resources>
