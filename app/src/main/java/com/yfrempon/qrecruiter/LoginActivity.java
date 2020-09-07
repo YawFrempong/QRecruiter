@@ -64,6 +64,7 @@ import com.twitter.sdk.android.core.identity.TwitterLoginButton;
 import java.util.ArrayList;
 import java.util.Map;
 
+//Email addresses need to be encoded since Firebase Realtime Database won't allow the following characters to be stored as keys in the database
 /*
 '.' -> 7702910
 '#' -> 6839189
@@ -84,26 +85,33 @@ public class LoginActivity extends AppCompatActivity {
     public static LoginButton btnSignInFacebook;
     public static TwitterLoginButton mTwitterBtn;
     CallbackManager mCallbackManager_Facebook;
-    int RC_SIGN_IN = 123;
-    boolean facebookButtonClicked = false;
-    boolean googleButtonClicked = false;
-    boolean twitterButtonClicked = false;
     public static DatabaseReference databaseRef;
     public static DatabaseReference rootRef;
     public static DatabaseReference emailRef;
     public static GoogleSignInClient mGoogleSignInClient;
+    int RC_SIGN_IN = 123;
+    boolean facebookButtonClicked = false;
+    boolean googleButtonClicked = false;
+    boolean twitterButtonClicked = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //This code must be entering before the setContentView to make the twitter login work...
+        //This code must be entering before the setContentView function to make the twitter login work(according to Twitter API documentation)
+        //Initialize Twitter Login
         TwitterAuthConfig mTwitterAuthConfig = new TwitterAuthConfig(getString(R.string.twitter_consumer_key), getString(R.string.twitter_consumer_secret));
         TwitterConfig twitterConfig = new TwitterConfig.Builder(this)
             .twitterAuthConfig(mTwitterAuthConfig)
             .build();
         Twitter.initialize(twitterConfig);
-
+        SessionManager<TwitterSession> sessionManager = TwitterCore.getInstance().getSessionManager();
+        if (sessionManager.getActiveSession() != null){
+            sessionManager.clearActiveSession();
+        }
+        mTwitterBtn = findViewById(R.id.sign_in_button_twitter);
+        
+        //store activity content in variables
         setContentView(R.layout.activity_login);
         emailId = findViewById(R.id.editText);
         password = findViewById(R.id.editText2);
@@ -111,6 +119,8 @@ public class LoginActivity extends AppCompatActivity {
         btnSignIn = findViewById(R.id.button2);
         tvSignUp = findViewById(R.id.textView);
         tvForgot = findViewById(R.id.textView2);
+        
+        //initialize database reference and enable persistence for offline mode(update database when reconnecting if internet connect was lost)
         if(databaseRef == null){
             FirebaseDatabase database = FirebaseDatabase.getInstance();
             database.setPersistenceEnabled(true);
@@ -118,20 +128,34 @@ public class LoginActivity extends AppCompatActivity {
         }
         rootRef = databaseRef.child("users");
         emailRef = databaseRef.child("emails");
+        
+        //initialize Google login
         createGoogleSignIn();
         btnSignInGoogle = findViewById(R.id.sign_in_button_google);
         btnSignInGoogle.setSize(SignInButton.SIZE_WIDE);
+        
+        //initialize Facebook login
         FacebookSdk.getApplicationContext();
-
         CookieManager cookieManager = CookieManager.getInstance();
         cookieManager.removeAllCookie();
-
+        mCallbackManager_Facebook = CallbackManager.Factory.create();
+        btnSignInFacebook = findViewById(R.id.sign_in_button_facebook);
+        btnSignInFacebook.setReadPermissions("email","public_profile");
+        
+        //make sure all accounts are logged out when app loads
+        mGoogleSignInClient.signOut();
+        LoginManager.getInstance().logOut();
+        FirebaseAuth.getInstance().signOut();
+        
+        //login through Firebase Authentication
         btnSignIn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String email = emailId.getText().toString();
                 String pwd = password.getEditText().getText().toString();
                 closeKeyboard();
+                
+                //handle login through Firebase Authentication 
                 if(email.isEmpty() && pwd.isEmpty()){
                     Toast.makeText(LoginActivity.this,"Fields Are Empty!",Toast.LENGTH_SHORT).show();
                 }
@@ -182,7 +206,8 @@ public class LoginActivity extends AppCompatActivity {
                 }
             }
         });
-
+        
+        //sign-up button clicked
         tvSignUp.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -192,12 +217,16 @@ public class LoginActivity extends AppCompatActivity {
                 password.getEditText().getText().clear();
             }
         });
+        
+        //forgot password button clicked(3rd party accounts must reset password through their provider -> Facebook, Google, Twitter)
         tvForgot.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 showForgotDialog();
             }
         });
+        
+        //sign-in with Google button clicked
         btnSignInGoogle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -211,18 +240,8 @@ public class LoginActivity extends AppCompatActivity {
                 signInGoogle();
             }
         });
-        mCallbackManager_Facebook = CallbackManager.Factory.create();
-        btnSignInFacebook = findViewById(R.id.sign_in_button_facebook);
-        btnSignInFacebook.setReadPermissions("email","public_profile");
-
-        SessionManager<TwitterSession> sessionManager = TwitterCore.getInstance().getSessionManager();
-        if (sessionManager.getActiveSession() != null){
-            sessionManager.clearActiveSession();
-        }
-        mGoogleSignInClient.signOut();
-        LoginManager.getInstance().logOut();
-        FirebaseAuth.getInstance().signOut();
-
+        
+        //sign-in with Facebook button clicked
         btnSignInFacebook.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -235,6 +254,22 @@ public class LoginActivity extends AppCompatActivity {
                 mTwitterBtn.setEnabled(false);
             }
         });
+        
+        //sign-in with Twitter button clicked
+        mTwitterBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                twitterButtonClicked = true;
+                btnSignIn.setEnabled(false);
+                tvSignUp.setEnabled(false);
+                tvForgot.setEnabled(false);
+                btnSignInGoogle.setEnabled(false);
+                btnSignInFacebook.setEnabled(false);
+                mTwitterBtn.setEnabled(false);
+            }
+        });
+        
+        //Facebook callback function
         btnSignInFacebook.registerCallback(mCallbackManager_Facebook, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
@@ -260,20 +295,8 @@ public class LoginActivity extends AppCompatActivity {
                 mTwitterBtn.setEnabled(true);
             }
         });
-
-        mTwitterBtn = findViewById(R.id.sign_in_button_twitter);
-        mTwitterBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                twitterButtonClicked = true;
-                btnSignIn.setEnabled(false);
-                tvSignUp.setEnabled(false);
-                tvForgot.setEnabled(false);
-                btnSignInGoogle.setEnabled(false);
-                btnSignInFacebook.setEnabled(false);
-                mTwitterBtn.setEnabled(false);
-            }
-        });
+        
+        //Twitter callback function
         mTwitterBtn.setCallback(new Callback<TwitterSession>() {
             @Override
             public void success(Result<TwitterSession> result) {
@@ -291,6 +314,8 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
+    
+    //restart login UI when the login activity is resumed
     @Override
     protected void onResume(){
         super.onResume();
@@ -325,6 +350,8 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
+    
+    //custom function for closing the keyboard
     private void closeKeyboard() {
         View view = this.getCurrentFocus();
         if(view != null){
@@ -332,7 +359,8 @@ public class LoginActivity extends AppCompatActivity {
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
-
+    
+    //handle text input for provided email during password recovery
     private void showForgotDialog(){
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Recover Password");
@@ -381,6 +409,8 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
+    
+    //handle recovery(encode illegal characters, verify that the provided email exist in our database, and make sure it is not a 3rd party account)
     private void beginRecovery(final String emailInput){
         final String cleanEmailInput = emailInput.replaceAll("\\.","7702910").replaceAll("\\#","6839189").replaceAll("\\$","5073014").replaceAll("\\[","3839443").replaceAll("\\]","6029018").replaceAll("/","2528736");
         emailRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -409,6 +439,8 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
+    
+    //send recovery info to provided email
     private void beginRecovery2(String emailInput){
         FirebaseAuth.getInstance().sendPasswordResetEmail(emailInput).addOnCompleteListener(new OnCompleteListener<Void>() {
             @Override
@@ -427,6 +459,8 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
+    
+    //start Google sign-in process
     private void createGoogleSignIn(){
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
             .requestIdToken(getString(R.string.default_web_client_id))
@@ -434,54 +468,16 @@ public class LoginActivity extends AppCompatActivity {
             .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
     }
+    
+    //go to google sign-in page
     private void signInGoogle() {
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
-    private void signInFacebook(AccessToken token) {
-        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
-        FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                if(!task.isSuccessful()){
-                    Toast.makeText(LoginActivity.this, "Failed to Sign-In with Facebook: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
-                    LoginManager.getInstance().logOut();
-                    btnSignIn.setEnabled(true);
-                    tvSignUp.setEnabled(true);
-                    tvForgot.setEnabled(true);
-                    btnSignInGoogle.setEnabled(true);
-                    btnSignInFacebook.setEnabled(true);
-                    mTwitterBtn.setEnabled(true);
-                } else {
-                    rootRef.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            if(dataSnapshot.getValue() == null){
-                                initUIDinDatabase();
-                                addToEmailList(FirebaseAuth.getInstance().getCurrentUser().getEmail(),"Facebook");
-                            } else {
-                                Intent intToHome = new Intent(LoginActivity.this, ListActivity.class);
-                                startActivity(intToHome);
-                                emailId.getText().clear();
-                                password.getEditText().getText().clear();
-                            }
-                        }
-                        @Override
-                        public void onCancelled(DatabaseError error) {
-                            Toast.makeText(LoginActivity.this,error.getMessage(),Toast.LENGTH_SHORT).show();
-                            btnSignIn.setEnabled(true);
-                            tvSignUp.setEnabled(true);
-                            tvForgot.setEnabled(true);
-                            btnSignInGoogle.setEnabled(true);
-                            btnSignInFacebook.setEnabled(true);
-                            mTwitterBtn.setEnabled(true);
-                        }
-                    });
-
-                }
-            }
-        });
-    }
+   
+    //attempt to login with an existing google account
+    //Note 1: Google accounts have priority over Firebase accounts that have been created with a gmail address
+    //Note 2: We keep track of emails to prevent Google accounts from overriding Firebase accounts that have been created with a gmail address
     private void firebaseAuthWithGoogle(String idToken, final String account_email) {
         final AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
         emailRef.addListenerForSingleValueEvent(new ValueEventListener() {
@@ -523,6 +519,8 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
+    
+    //attempt to login with a new google account
     private void firebaseAuthWithGoogle2(AuthCredential x){
         FirebaseAuth.getInstance().signInWithCredential(x)
             .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
@@ -568,6 +566,54 @@ public class LoginActivity extends AppCompatActivity {
                 }
             });
     }
+    
+    //attempt to login with facebook account
+    private void signInFacebook(AccessToken token) {
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+        FirebaseAuth.getInstance().signInWithCredential(credential).addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+            @Override
+            public void onComplete(@NonNull Task<AuthResult> task) {
+                if(!task.isSuccessful()){
+                    Toast.makeText(LoginActivity.this, "Failed to Sign-In with Facebook: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    LoginManager.getInstance().logOut();
+                    btnSignIn.setEnabled(true);
+                    tvSignUp.setEnabled(true);
+                    tvForgot.setEnabled(true);
+                    btnSignInGoogle.setEnabled(true);
+                    btnSignInFacebook.setEnabled(true);
+                    mTwitterBtn.setEnabled(true);
+                } else {
+                    rootRef.child(FirebaseAuth.getInstance().getCurrentUser().getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if(dataSnapshot.getValue() == null){
+                                initUIDinDatabase();
+                                addToEmailList(FirebaseAuth.getInstance().getCurrentUser().getEmail(),"Facebook");
+                            } else {
+                                Intent intToHome = new Intent(LoginActivity.this, ListActivity.class);
+                                startActivity(intToHome);
+                                emailId.getText().clear();
+                                password.getEditText().getText().clear();
+                            }
+                        }
+                        @Override
+                        public void onCancelled(DatabaseError error) {
+                            Toast.makeText(LoginActivity.this,error.getMessage(),Toast.LENGTH_SHORT).show();
+                            btnSignIn.setEnabled(true);
+                            tvSignUp.setEnabled(true);
+                            tvForgot.setEnabled(true);
+                            btnSignInGoogle.setEnabled(true);
+                            btnSignInFacebook.setEnabled(true);
+                            mTwitterBtn.setEnabled(true);
+                        }
+                    });
+
+                }
+            }
+        });
+    }
+    
+    //attempt to login with twitter account
     private void signInToFirebaseWithTwitterSession(TwitterSession session){
         AuthCredential credential = TwitterAuthProvider.getCredential(session.getAuthToken().token, session.getAuthToken().secret);
         FirebaseAuth.getInstance().signInWithCredential(credential)
@@ -615,6 +661,8 @@ public class LoginActivity extends AppCompatActivity {
                 }
             });
     }
+    
+    //generate a key(unique ID) in the database to store logged-in user's data
     private void initUIDinDatabase(){
         ArrayList<String> init_arr = new ArrayList<>();
         init_arr.add("link~~name~~starred");
@@ -641,6 +689,8 @@ public class LoginActivity extends AppCompatActivity {
                 }
             });
     }
+    
+    //keep track of email addresses and email providers for our users to prevent duplicate accounts and account overriding
     private void addToEmailList(String passed_email, String domain){
         String clean_email = passed_email.replaceAll("\\.","7702910").replaceAll("\\#","6839189").replaceAll("\\$","5073014").replaceAll("\\[","3839443").replaceAll("\\]","6029018").replaceAll("/","2528736");
         emailRef.child(clean_email).setValue(domain).addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -662,6 +712,8 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
     }
+    
+    //handle login event when returning from (Google, Facebook, Twitter) custom login activity
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(facebookButtonClicked) {
