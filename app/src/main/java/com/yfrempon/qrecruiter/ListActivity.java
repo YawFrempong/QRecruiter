@@ -42,31 +42,33 @@ import static java.lang.Character.isWhitespace;
 public class ListActivity extends AppCompatActivity {
 
     public static ListView mListView;
-    private String m_Text = "";
     public static ArrayList<String> profiles;
-    private ArrayList<String> empty;
     public static String currentUserUID;
     public static ListViewAdapter adapter;
-    private SearchView searchView;
-    private MenuItem searchItem;
+    public static Map<String, Object> finalDocumentData;
     public static boolean deleteSelected = false;
     public static boolean editSelected = false;
-    private ActionMode mActionMode;
     public static List<String> userSelection = new ArrayList<>();
+    public static int listview_position = 0;
+    public static int listview_index = 0;
+    
+    private ArrayList<String> empty;
+    private SearchView searchView;
+    private MenuItem searchItem;
+    private ActionMode mActionMode;
     private boolean onBackButtonPressed;
     private boolean onLogoutPressed;
     private boolean search_active_flag;
     private boolean search_inactive_flag;
     private boolean search_skip_flag;
-    public static Map<String, Object> finalDocumentData;
-    public static int listview_position = 0;
-    public static int listview_index = 0;
+    private String m_Text = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setTitle("Events");
         setContentView(R.layout.activity_list);
+        
         //enable login buttons again
         LoginActivity.btnSignIn.setEnabled(true);
         LoginActivity.tvSignUp.setEnabled(true);
@@ -74,8 +76,11 @@ public class ListActivity extends AppCompatActivity {
         LoginActivity.btnSignInGoogle.setEnabled(true);
         LoginActivity.btnSignInFacebook.setEnabled(true);
         LoginActivity.mTwitterBtn.setEnabled(true);
-
+        
+        //store activity content in variables
         mListView = findViewById(R.id.eventListView);
+        
+        //initialize variables
         profiles = new ArrayList<>();
         empty = new ArrayList<>();
         finalDocumentData = new HashMap<>();
@@ -86,7 +91,11 @@ public class ListActivity extends AppCompatActivity {
         search_inactive_flag = false;
         search_skip_flag = false;
         empty.add("");
+        
+        //load data into listview
         populateListView();
+        
+        //go to event activity and load clicked event data
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -95,28 +104,30 @@ public class ListActivity extends AppCompatActivity {
                 intToEvent.putExtra("EVENT", item);
                 startActivity(intToEvent);
                 searchItem.collapseActionView();
+                
                 if(mActionMode != null){
                     mActionMode.finish();
                 }
             }
         });
     }
-    @Override
-    protected void onResume(){
-        super.onResume();
-        MyApplication.setContext(this);
-    }
+    
+    //show action bar when delete is selected
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
+        //initialize action bar
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             mode.getMenuInflater().inflate(R.menu.context_menu, menu);
             mode.setTitle("Delete");
             return true;
         }
+        //not used
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             return false;
         }
+        
+        //delete selected items
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             switch(item.getItemId()){
@@ -131,6 +142,8 @@ public class ListActivity extends AppCompatActivity {
                     return false;
             }
         }
+        
+        //clear variables and reload listview
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             deleteSelected = false;
@@ -139,23 +152,30 @@ public class ListActivity extends AppCompatActivity {
             userSelection.clear();
         }
     };
+    
+    //show action bar when rename is selected
     private ActionMode.Callback mActionModeCallback2 = new ActionMode.Callback() {
+        //initialize action bar
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             mode.getMenuInflater().inflate(R.menu.context_menu_2, menu);
             mode.setTitle("Rename");
             return true;
         }
+        
+        //not used
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             return false;
         }
-
+        
+        //not used
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             return false;
         }
-
+        
+        //clear variables and reload listview
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             editSelected = false;
@@ -163,16 +183,22 @@ public class ListActivity extends AppCompatActivity {
             mActionMode = null;
         }
     };
+    
+    //reload listview using local data
+    //this function is to minimize read & writes to the database
     private void populateListViewLocal() {
         profiles.clear();
         for (Map.Entry<String, Object> entry : finalDocumentData.entrySet()) {
             String key = entry.getKey();
+            
             if(!key.equals("default_event")){
                 profiles.add(key);
             }
         }
         loadListView();
     }
+    
+    //reload listview using the current data fetched from the database
     private void populateListView() {
         profiles.clear();
         FirebaseDatabase.getInstance().getReference("users").child(FirebaseAuth.getInstance().getCurrentUser().getUid()).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -181,6 +207,7 @@ public class ListActivity extends AppCompatActivity {
                 finalDocumentData = (Map<String, Object>) dataSnapshot.getValue();
                 for (Map.Entry<String, Object> entry : finalDocumentData.entrySet()) {
                     String key = entry.getKey();
+                    
                     if (!key.equals("default_event")) {
                         profiles.add(key);
                     }
@@ -193,10 +220,15 @@ public class ListActivity extends AppCompatActivity {
             }
         });
     }
+    
+    //load data into the listview
     private void loadListView(){
         adapter = new ListViewAdapter(profiles, ListActivity.this);
         mListView.setAdapter(adapter);
     }
+    
+    //static version of loadListView method to use globally
+    //loads listview without shifting the listview to the first element(previous UI issue)
     public static void loadListViewStatic(){
         listview_index = mListView.getFirstVisiblePosition();
         View v = mListView.getChildAt(0);
@@ -205,11 +237,15 @@ public class ListActivity extends AppCompatActivity {
         mListView.setAdapter(adapter);
         mListView.setSelectionFromTop(listview_index, listview_position);
     }
+    
+    //handle adding new events
     private void showAddItemDialog(Context c) {
         final EditText taskEditText = new EditText(c);
         taskEditText.setSingleLine(true);
         taskEditText.setLines(1);
         taskEditText.setMaxLines(1);
+        
+        //initialize dialog box
         final AlertDialog dialog = new AlertDialog.Builder(c)
                 .setTitle("Add an event")
                 .setMessage("Put a new event on the list: ")
@@ -218,6 +254,7 @@ public class ListActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         m_Text = String.valueOf(taskEditText.getText());
+                        
                         if(!m_Text.isEmpty()){
                             addToServer(m_Text);
                         }
@@ -227,16 +264,21 @@ public class ListActivity extends AppCompatActivity {
                 .create();
         dialog.show();
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
+        
+        //Check if event already exist & make sure edited input text for new event is valid
         taskEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
             }
+            
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
             }
+            
             @Override
             public void afterTextChanged(Editable s) {
                 dialog.setMessage(Html.fromHtml("<font color='#000000'>Put a new event on the list: </font>"));
+                
                 if (TextUtils.isEmpty(s)) {
                     dialog.getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(false);
                     return;
@@ -245,17 +287,20 @@ public class ListActivity extends AppCompatActivity {
                     String alphanum = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz1234567890 ";
                     String currentVal = taskEditText.getText().toString();
                     int currentLen = currentVal.length();
+                    
                     if(currentVal.contains(".")){
                         currentVal = currentVal.replace(".","");
                         taskEditText.setText(currentVal);
                         taskEditText.setSelection(taskEditText.getText().length());
                         return;
                     }
+                    
                     if ((alphanum.indexOf(currentVal.charAt(currentLen - 1)) == -1) || isWhitespace(currentVal.charAt(0)) ||currentVal.contains("  ")) {
                         taskEditText.setText(currentVal.substring(0, currentVal.length() - 1));
                         taskEditText.setSelection(taskEditText.getText().length());
                         return;
                     }
+                    
                     if(profiles.contains(taskEditText.getText().toString()) || profiles.contains(taskEditText.getText().toString().trim()) || taskEditText.getText().toString().length() > 25){
                         if(profiles.contains(taskEditText.getText().toString()) || profiles.contains(taskEditText.getText().toString().trim())) {
                             dialog.setMessage(Html.fromHtml("<font color='#FF0000'>Event Already Exist</font>"));
@@ -272,6 +317,8 @@ public class ListActivity extends AppCompatActivity {
             }
         });
     }
+    
+    //handle deleting current account(remove account from Firebase and remove email, UID, & user data from database)
     private void showDeleteAccountDialog(Context c) {
         final AlertDialog dialog = new AlertDialog.Builder(c)
             .setTitle("Delete Account")
@@ -294,7 +341,7 @@ public class ListActivity extends AppCompatActivity {
                             .addOnFailureListener(new OnFailureListener() {
                                 @Override
                                 public void onFailure(@NonNull Exception e) {
-
+                                    Toast.makeText(ListActivity.this,"Failed to delete email from database",Toast.LENGTH_SHORT).show();
                                 }
                             });
                         }
@@ -302,7 +349,7 @@ public class ListActivity extends AppCompatActivity {
                     .addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-
+                            Toast.makeText(ListActivity.this,"Failed to delete user data from database",Toast.LENGTH_SHORT).show();
                         }
                     });
                 }
@@ -311,6 +358,8 @@ public class ListActivity extends AppCompatActivity {
             .create();
         dialog.show();
     }
+    
+    //add event to database
     private void addToServer(String event){
         ArrayList<String> temp_val = new ArrayList<>();
         temp_val.add("link~~name~~starred");
@@ -318,6 +367,8 @@ public class ListActivity extends AppCompatActivity {
         LoginActivity.rootRef.child(currentUserUID).child(event).setValue(temp_val);
         populateListViewLocal();
     }
+    
+    //delete event(s) from database(make one write call regardless of the number of events being deleted)
     private void deleteProfile(List<String> events) {
         for (String event : events) {
             finalDocumentData.remove(event);
@@ -330,9 +381,13 @@ public class ListActivity extends AppCompatActivity {
         }
         populateListViewLocal();
     }
+    
+    //search through listview
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         MenuInflater inflater = getMenuInflater();
+        
+        //fix for search UI bug
         if(search_skip_flag){
             inflater.inflate(R.menu.example_menu_2, menu);
             search_skip_flag = false;
@@ -343,8 +398,11 @@ public class ListActivity extends AppCompatActivity {
         } else {
             inflater.inflate(R.menu.example_menu_2, menu);
         }
+        
         searchItem = menu.findItem(R.id.action_search);
         searchView = (SearchView) searchItem.getActionView();
+        
+        //filter list during search
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -357,6 +415,8 @@ public class ListActivity extends AppCompatActivity {
                 return false;
             }
         });
+        
+        //detect when search has ended
         searchView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
             public void onViewDetachedFromWindow(View arg0) {
@@ -372,45 +432,51 @@ public class ListActivity extends AppCompatActivity {
         });
         return true;
     }
+    
+    //detect when menu option is selected(add, rename, delete, sort, logout, delete account)
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
         switch (item.getItemId()) {
-            case R.id.action_menu_item_1_sub_1:
+            case R.id.action_menu_item_1_sub_1:     //sort A-Z
                 sortList(0);
                 return true;
-            case R.id.action_menu_item_1_sub_2:
+            case R.id.action_menu_item_1_sub_2:     //sort Z-A
                 sortList(1);
                 return true;
-            case R.id.action_menu_item_1_point_5:
+            case R.id.action_menu_item_1_point_5:   //add
                 showAddItemDialog(ListActivity.this);
                 return true;
-            case R.id.action_menu_item_2:
+            case R.id.action_menu_item_2:           //rename
                 if(mActionMode != null){
                     return false;
                 }
+                
                 mActionMode = startSupportActionMode(mActionModeCallback2);
                 editSelected = true;
                 mListView.setAdapter(adapter);
                 return true;
-            case R.id.action_menu_item_2_point_5:
+            case R.id.action_menu_item_2_point_5:   //delete event
                 if(mActionMode != null){
                     return false;
                 }
+                
                 mActionMode = startSupportActionMode(mActionModeCallback);
                 deleteSelected = true;
                 mListView.setAdapter(adapter);
                 return true;
-            case  R.id.action_menu_item_3:
+            case  R.id.action_menu_item_3:          //logout
                 onLogoutPressed = true;
                 Intent intToMain = new Intent(ListActivity.this, LoginActivity.class);
                 startActivity(intToMain);
                 searchItem.collapseActionView();
                 return true;
-            case R.id.action_menu_item_4:
+            case R.id.action_menu_item_4:           //delete account
                 showDeleteAccountDialog(ListActivity.this);
         }
         return super.onOptionsItemSelected(item);
     }
+    
+    //sort options
     public void sortList(int value){
         if(value == 0){
             ArrayList<Object> temp = (ArrayList<Object>)profiles.clone();
@@ -427,6 +493,8 @@ public class ListActivity extends AppCompatActivity {
             mListView.setAdapter(adapter);
         }
     }
+    
+    //merge sort helper function(A-Z)
     public static void merge(ArrayList<Object> arr, int l, int m, int r) {
         int n1 = m - l + 1;
         int n2 = r - m;
@@ -441,6 +509,7 @@ public class ListActivity extends AppCompatActivity {
 
         int i = 0, j = 0;
         int k = l;
+        
         while (i < n1 && j < n2) {
             if (((L[i].toLowerCase()).compareTo(R[j].toLowerCase())) < 0) {
                 arr.set(k , L[i]);
@@ -453,6 +522,7 @@ public class ListActivity extends AppCompatActivity {
             else{
                 int min_length = L[i].length();
                 boolean r_lesser = false;
+                
                 if(L[i].length() > R[j].length()){
                     min_length = R[i].length();
                     r_lesser = true;
@@ -485,26 +555,21 @@ public class ListActivity extends AppCompatActivity {
             }
             k++;
         }
+        
         while (i < n1) {
             arr.set(k , L[i]);
             i++;
             k++;
         }
+        
         while (j < n2) {
             arr.set(k , R[j]);
             j++;
             k++;
         }
     }
-    public static ArrayList<Object> sort_merge(ArrayList<Object> arr, int l, int r) {
-        if (l < r) {
-            int m = (l + r) / 2;
-            sort_merge(arr, l, m);
-            sort_merge(arr, m + 1, r);
-            merge(arr, l, m, r);
-        }
-        return arr;
-    }
+    
+    //merge sort helper function(Z-A)
     public static void merge2(ArrayList<Object> arr, int l, int m, int r) {
         int n1 = m - l + 1;
         int n2 = r - m;
@@ -514,11 +579,13 @@ public class ListActivity extends AppCompatActivity {
 
         for (int i = 0; i < n1; ++i)
             L[i] = arr.get(l + i).toString();
+        
         for (int j = 0; j < n2; ++j)
             R[j] = arr.get(m + 1 + j).toString();
 
         int i = 0, j = 0;
         int k = l;
+        
         while (i < n1 && j < n2) {
             if (((L[i].toLowerCase()).compareTo(R[j].toLowerCase())) > 0) {
                 arr.set(k , L[i]);
@@ -531,6 +598,7 @@ public class ListActivity extends AppCompatActivity {
             else{
                 int min_length = L[i].length();
                 boolean r_lesser = false;
+                
                 if(L[i].length() > R[j].length()){
                     min_length = R[i].length();
                     r_lesser = true;
@@ -563,17 +631,32 @@ public class ListActivity extends AppCompatActivity {
             }
             k++;
         }
+        
         while (i < n1) {
             arr.set(k , L[i]);
             i++;
             k++;
         }
+        
         while (j < n2) {
             arr.set(k , R[j]);
             j++;
             k++;
         }
     }
+    
+    //merge sort in alphabetical order(A-Z)
+    public static ArrayList<Object> sort_merge(ArrayList<Object> arr, int l, int r) {
+        if (l < r) {
+            int m = (l + r) / 2;
+            sort_merge(arr, l, m);
+            sort_merge(arr, m + 1, r);
+            merge(arr, l, m, r);
+        }
+        return arr;
+    }
+    
+    //merge sort in reverse alphabetical order(Z-A)
     public static ArrayList<Object> sort_merge2(ArrayList<Object> arr, int l, int r) {
         if (l < r) {
             int m = (l + r) / 2;
@@ -583,18 +666,33 @@ public class ListActivity extends AppCompatActivity {
         }
         return arr;
     }
+    
+    //bottom bar back button pressed
     @Override
     public void onBackPressed() {
         onBackButtonPressed = true;
         finish();
     }
+    
+    //get current activity context when activity is again
+    @Override
+    protected void onResume(){
+        super.onResume();
+        MyApplication.setContext(this);
+    }
+    
+    //sign-out and clear webview session when logout or back button is pressed
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+        
         if(onLogoutPressed || onBackButtonPressed) {
             SessionManager<TwitterSession> sessionManager = TwitterCore.getInstance().getSessionManager();
+            
             if (sessionManager.getActiveSession() != null){
                 sessionManager.clearActiveSession();
             }
+            
             LoginActivity.mGoogleSignInClient.signOut();
             LoginManager.getInstance().logOut();
             FirebaseAuth.getInstance().signOut();
