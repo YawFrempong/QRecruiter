@@ -38,31 +38,33 @@ import java.util.List;
 import java.util.Map;
 
 public class EventActivity extends AppCompatActivity {
-
+    
     public static ListView mListView;
-    Intent intent;
     public static String selected_event;
     public static ArrayList<String> EventData;
     public static ArrayList<Object> names;
     public static Map<String, String> name2link;
     public static Map<String, String> userSelectionFavorite;
     public static ListViewAdapter2 adapter;
-    private SearchView searchView;
-    private MenuItem searchItem;
-    private ActionMode mActionMode;
+    public static Map<String, Object> exportMap;
     public static boolean deleteSelected = false;
     public static boolean editSelected = false;
     public static List<String> userSelection = new ArrayList<>();
-    public static Map<String, Object> exportMap;
+    public static int listview_position = 0;
+    public static int listview_index = 0;
+    
+    private SearchView searchView;
+    private MenuItem searchItem;
+    private ActionMode mActionMode;
     private boolean logoutFlag;
     private boolean onBackButtonPressed;
     private boolean search_active_flag;
     private boolean search_inactive_flag;
     private boolean search_skip_flag;
-    WebView webView;
     private int sortVal = -1;
-    public static int listview_position = 0;
-    public static int listview_index = 0;
+    
+    Intent intent;
+    WebView webView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,11 +72,17 @@ public class EventActivity extends AppCompatActivity {
         setContentView(R.layout.activity_event);
         setTitle("Saved Profiles");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        
+        //store activity content in variables
+        mListView = findViewById(R.id.listView);
         webView = findViewById(R.id.webView1);
+        
+        //set webview to LinkedIn website
         webView.setWebViewClient(new WebViewClient());
         webView.getSettings().setJavaScriptEnabled(true);
         webView.loadUrl("https://www.linkedin.com/");
-        mListView = findViewById(R.id.listView);
+        
+        //initialize variables
         exportMap = new HashMap<>();
         EventData = new ArrayList<>();
         names = new ArrayList<>();
@@ -88,7 +96,11 @@ public class EventActivity extends AppCompatActivity {
         intent = getIntent();
         selected_event = intent.getStringExtra("EVENT");
         EventData = (ArrayList<String>)ListActivity.finalDocumentData.get(selected_event);
+        
+        //load data into listview
         populateListView();
+        
+        //load clicked LinkedIn profile in webview
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -105,6 +117,8 @@ public class EventActivity extends AppCompatActivity {
             }
         });
     }
+    
+    //remove profile from database and local data then refresh listview with updated local data(minimizes writes to the database)
     private void deleteProfile(List<String> selected_labels) {
         for(String label: selected_labels) {
             for (int i = 0; i < EventData.size(); i++) {
@@ -116,18 +130,25 @@ public class EventActivity extends AppCompatActivity {
         LoginActivity.rootRef.child(ListActivity.currentUserUID).child(selected_event).setValue(EventData);
         populateListView();
     }
+    
+    //show action bar when 'delete' is selected
     private ActionMode.Callback mActionModeCallback = new ActionMode.Callback() {
+        
+        //initialize action bar
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             mode.getMenuInflater().inflate(R.menu.context_menu, menu);
             mode.setTitle("Delete");
             return true;
         }
+        
+        //not used
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             return false;
         }
-
+        
+        //delete selected items
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             switch(item.getItemId()){
@@ -142,6 +163,8 @@ public class EventActivity extends AppCompatActivity {
                     return false;
             }
         }
+        
+        //clear variables and reload listview
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             deleteSelected = false;
@@ -150,23 +173,30 @@ public class EventActivity extends AppCompatActivity {
             userSelection.clear();
         }
     };
+    
+    //show action bar when 'rename' is selected
     private ActionMode.Callback mActionModeCallback2 = new ActionMode.Callback() {
+        //initialize action bar
         @Override
         public boolean onCreateActionMode(ActionMode mode, Menu menu) {
             mode.getMenuInflater().inflate(R.menu.context_menu_2, menu);
             mode.setTitle("Rename");
             return true;
         }
+        
+        //not used
         @Override
         public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
             return false;
         }
-
+        
+        //not used
         @Override
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             return false;
         }
-
+        
+        //clear variables and reload listview
         @Override
         public void onDestroyActionMode(ActionMode mode) {
             editSelected = false;
@@ -175,12 +205,13 @@ public class EventActivity extends AppCompatActivity {
         }
     };
 
-
+    //reload listview using local data
     private void populateListView() {
         names.clear();
         name2link.clear();
         userSelectionFavorite.clear();
         String temp_name, temp_link, temp_starred;
+        
         for(String info: EventData){
             if(info.equals("link~~name~~starred")){
                 continue;
@@ -195,6 +226,8 @@ public class EventActivity extends AppCompatActivity {
         }
         loadListView();
     }
+    
+    //load data into the listview
     private void loadListView(){
         if(sortVal == 0){
             sortList(0);
@@ -205,6 +238,9 @@ public class EventActivity extends AppCompatActivity {
             mListView.setAdapter(adapter);
         }
     }
+    
+    //static version of loadListView method to use globally
+    //loads listview without shifting the listview to the first element(previous UI issue)
     public static void loadListViewStatic(){
         listview_index = mListView.getFirstVisiblePosition();
         View v = mListView.getChildAt(0);
@@ -213,10 +249,14 @@ public class EventActivity extends AppCompatActivity {
         mListView.setAdapter(adapter);
         mListView.setSelectionFromTop(listview_index, listview_position);
     }
+    
+    //export to .csv file
     private void export(){
         StringBuilder exportSTR = new StringBuilder();
         StringBuilder exportSTR_false = new StringBuilder();
         exportSTR.append("Name,Profile,Favorite");
+        
+        //parse profiles in event data
         for(String x: EventData) {
             String local_key = x.split("~~")[0];
             ArrayList<String> local_value = new ArrayList<>();
@@ -224,10 +264,14 @@ public class EventActivity extends AppCompatActivity {
             local_value.add(x.split("~~")[2]);
             exportMap.put(local_key, local_value);
         }
+        
+        //default value: link~~name~~starred doens't count
         if(exportMap.size() == 1){
             Toast.makeText(EventActivity.this,"You need one or more profiles to export.",Toast.LENGTH_SHORT).show();
             return;
         }
+        
+        //convert map to string
         for (Map.Entry<String,Object> entry : exportMap.entrySet()) {
             ArrayList<String> export_temp = (ArrayList<String>)entry.getValue();
             if(entry.getKey().equals("link")){
@@ -240,8 +284,11 @@ public class EventActivity extends AppCompatActivity {
                 exportSTR_false.append("\n" + export_temp.get(0) + "," + entry.getKey() + ",No");
             }
         }
+        
         exportSTR.append(exportSTR_false);
-        try{
+        
+        //export to csv
+        try {
             exportMap.clear();
             FileOutputStream out = openFileOutput(selected_event + ".csv", Context.MODE_PRIVATE);
             out.write((exportSTR.toString()).getBytes());
@@ -254,6 +301,7 @@ public class EventActivity extends AppCompatActivity {
             fileIntent.putExtra(Intent.EXTRA_SUBJECT, selected_event + " Spreadsheet");
             fileIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             fileIntent.putExtra(Intent.EXTRA_STREAM, path);
+            
             if (fileIntent.resolveActivity(getPackageManager()) != null) {
                 startActivity(Intent.createChooser(fileIntent, "Send mail"));
             }
@@ -261,38 +309,13 @@ public class EventActivity extends AppCompatActivity {
             Toast.makeText(EventActivity.this,"Failed to export profiles.",Toast.LENGTH_SHORT).show();
         }
     }
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if(logoutFlag){
-            SessionManager<TwitterSession> sessionManager = TwitterCore.getInstance().getSessionManager();
-            if (sessionManager.getActiveSession() != null){
-                sessionManager.clearActiveSession();
-            }
-            LoginActivity.mGoogleSignInClient.signOut();
-            LoginManager.getInstance().logOut();
-            FirebaseAuth.getInstance().signOut();
-            CookieManager cookieManager = CookieManager.getInstance();
-            cookieManager.removeAllCookie();
-        }
-        if(onBackButtonPressed){
-            ListActivity.finalDocumentData.put(selected_event, EventData);
-        }
-    }
-    @Override
-    public void onBackPressed() {
-        onBackButtonPressed = true;
-        finish();
-    }
-    @Override
-    public void onResume() {
-        super.onResume();
-        populateListView();
-        MyApplication.setContext(this);
-    }
+    
+    //search through listview
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         MenuInflater inflater = getMenuInflater();
+        
+        //search UI bug fix
         if(search_skip_flag){
             inflater.inflate(R.menu.example_menu, menu);
             search_skip_flag = false;
@@ -303,9 +326,12 @@ public class EventActivity extends AppCompatActivity {
         } else {
             inflater.inflate(R.menu.example_menu, menu);
         }
+        
         searchItem = menu.findItem(R.id.action_search);
         searchView = (SearchView) searchItem.getActionView();
         searchView.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        
+        //filter list during search
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -317,6 +343,8 @@ public class EventActivity extends AppCompatActivity {
                 return false;
             }
         });
+        
+        //detect when search has ended
         searchItem.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionExpand(MenuItem menuItem) {
@@ -330,6 +358,8 @@ public class EventActivity extends AppCompatActivity {
                 return true;
             }
         });
+        
+        //detect when search has closed
         searchView.addOnAttachStateChangeListener(new View.OnAttachStateChangeListener() {
             @Override
             public void onViewDetachedFromWindow(View arg0) {
@@ -345,27 +375,33 @@ public class EventActivity extends AppCompatActivity {
         });
         return true;
     }
+    
+    //detect when menu option is selected(add, rename, delete, sort, export, logout, delete account)
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
                 onBackPressed();
                 return true;
-            case R.id.action_menu_item_1_sub_1:
+                
+            case R.id.action_menu_item_1_sub_1:     //sort A-Z
                 sortList(0);
                 sortVal = 0;
                 return true;
-            case R.id.action_menu_item_1_sub_2:
+                
+            case R.id.action_menu_item_1_sub_2:     //sort Z-A
                 sortList(1);
                 sortVal = 1;
                 return true;
-            case R.id.action_menu_item_1_point_5:
+                
+            case R.id.action_menu_item_1_point_5:   //add
                 Intent intToEvent = new Intent(EventActivity.this, QRActivity.class);
                 intToEvent.putExtra("EVENT2", selected_event);
                 intToEvent.putExtra("listOfNames", names);
                 startActivity(intToEvent);
                 searchItem.collapseActionView();
                 return true;
-            case  R.id.action_menu_item_2:
+                
+            case  R.id.action_menu_item_2:          //rename
                 if(mActionMode != null){
                     return false;
                 }
@@ -373,7 +409,8 @@ public class EventActivity extends AppCompatActivity {
                 editSelected = true;
                 mListView.setAdapter(adapter);
                 return true;
-            case R.id.action_menu_item_2_point_5:
+                
+            case R.id.action_menu_item_2_point_5:   //delete event
                 if(mActionMode != null){
                     return false;
                 }
@@ -381,21 +418,66 @@ public class EventActivity extends AppCompatActivity {
                 deleteSelected = true;
                 mListView.setAdapter(adapter);
                 return true;
-            case R.id.action_menu_item_3:
+                
+            case R.id.action_menu_item_3:       //export to csv
                 export();
                 return true;
-            case  R.id.action_menu_item_3_point_5:
+                
+            case  R.id.action_menu_item_3_point_5:  //logout
                 logoutFlag = true;
                 Intent intToMain = new Intent(EventActivity.this, LoginActivity.class);
                 startActivity(intToMain);
                 searchItem.collapseActionView();
                 return true;
-            case  R.id.action_menu_item_4:
+                
+            case  R.id.action_menu_item_4:      //delete account
                 showDeleteAccountDialog(EventActivity.this);
                 return true;
         }
         return super.onOptionsItemSelected(item);
     }
+    
+    //handle deleting current account(remove account from Firebase and remove email, UID, & user data from database)
+    private void showDeleteAccountDialog(Context c) {
+        final AlertDialog dialog = new AlertDialog.Builder(c)
+            .setTitle("Delete Account")
+            .setMessage("Are you sure you want to delete your account? All your data will be erased.")
+            .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    String curr_email = FirebaseAuth.getInstance().getCurrentUser().getEmail().replaceAll("\\.","7702910").replaceAll("\\#","6839189").replaceAll("\\$","5073014").replaceAll("\\[","3839443").replaceAll("\\]","6029018").replaceAll("/","2528736");
+                    LoginActivity.rootRef.child(ListActivity.currentUserUID).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            LoginActivity.emailRef.child(curr_email).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+                                    FirebaseAuth.getInstance().getCurrentUser().delete();
+                                    Intent intToMain = new Intent(EventActivity.this, LoginActivity.class);
+                                    startActivity(intToMain);
+                                }
+                            })
+                            .addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception e) {
+                                }
+                            });
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+
+                        }
+                    });
+                }
+            })
+            .setNegativeButton("Cancel", null)
+            .create();
+        dialog.show();
+    }
+    
+    //sort options
     public void sortList(int value){
         if(value == 0){
             ArrayList<Object> temp = (ArrayList<Object>)names.clone();
@@ -412,6 +494,8 @@ public class EventActivity extends AppCompatActivity {
             mListView.setAdapter(adapter);
         }
     }
+    
+    //merge sort helper function(A-Z)
     public static void merge(ArrayList<Object> arr, int l, int m, int r) {
         int n1 = m - l + 1;
         int n2 = r - m;
@@ -478,16 +562,8 @@ public class EventActivity extends AppCompatActivity {
             k++;
         }
     }
-    public static ArrayList<Object> sort_merge(ArrayList<Object> arr, int l, int r) {
-        if (l < r) {
-            int m = (l + r) / 2;
-            sort_merge(arr, l, m);
-            sort_merge(arr, m + 1, r);
-            merge(arr, l, m, r);
-        }
-        return arr;
-    }
-
+    
+    //merge sort helper function(Z-A)
     public static void merge2(ArrayList<Object> arr, int l, int m, int r) {
         int n1 = m - l + 1;
         int n2 = r - m;
@@ -554,6 +630,19 @@ public class EventActivity extends AppCompatActivity {
             k++;
         }
     }
+    
+    //merge sort in alphabetical order(A-Z)
+    public static ArrayList<Object> sort_merge(ArrayList<Object> arr, int l, int r) {
+        if (l < r) {
+            int m = (l + r) / 2;
+            sort_merge(arr, l, m);
+            sort_merge(arr, m + 1, r);
+            merge(arr, l, m, r);
+        }
+        return arr;
+    }
+
+    //merge sort in reverse alphabetical order(Z-A)
     public static ArrayList<Object> sort_merge2(ArrayList<Object> arr, int l, int r) {
         if (l < r) {
             int m = (l + r) / 2;
@@ -563,43 +652,41 @@ public class EventActivity extends AppCompatActivity {
         }
         return arr;
     }
-    private void showDeleteAccountDialog(Context c) {
-        final AlertDialog dialog = new AlertDialog.Builder(c)
-            .setTitle("Delete Account")
-            .setMessage("Are you sure you want to delete your account? All your data will be erased.")
-            .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    String curr_email = FirebaseAuth.getInstance().getCurrentUser().getEmail().replaceAll("\\.","7702910").replaceAll("\\#","6839189").replaceAll("\\$","5073014").replaceAll("\\[","3839443").replaceAll("\\]","6029018").replaceAll("/","2528736");
-                    LoginActivity.rootRef.child(ListActivity.currentUserUID).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            LoginActivity.emailRef.child(curr_email).removeValue().addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-                                    FirebaseAuth.getInstance().getCurrentUser().delete();
-                                    Intent intToMain = new Intent(EventActivity.this, LoginActivity.class);
-                                    startActivity(intToMain);
-                                }
-                            })
-                            .addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception e) {
-                                }
-                            });
-                        }
-                    })
-                    .addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-
-                        }
-                    });
-                }
-            })
-            .setNegativeButton("Cancel", null)
-            .create();
-        dialog.show();
+    
+    //bottom bar back button pressed
+    @Override
+    public void onBackPressed() {
+        onBackButtonPressed = true;
+        finish();
+    }
+    
+    //get current activity context and reload listview when activity is active again
+    @Override
+    public void onResume() {
+        super.onResume();
+        populateListView();
+        MyApplication.setContext(this);
+    }
+    
+    //sign-out and clear webview session when logout is pressed
+    //update global user data when back button is pressed
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if(logoutFlag){
+            SessionManager<TwitterSession> sessionManager = TwitterCore.getInstance().getSessionManager();
+            if (sessionManager.getActiveSession() != null){
+                sessionManager.clearActiveSession();
+            }
+            LoginActivity.mGoogleSignInClient.signOut();
+            LoginManager.getInstance().logOut();
+            FirebaseAuth.getInstance().signOut();
+            CookieManager cookieManager = CookieManager.getInstance();
+            cookieManager.removeAllCookie();
+        }
+        if(onBackButtonPressed){
+            ListActivity.finalDocumentData.put(selected_event, EventData);
+        }
     }
 }
 
