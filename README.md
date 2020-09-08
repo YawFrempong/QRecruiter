@@ -17,5 +17,9 @@
 
 <img src="app_screenshots/firebase.png" width="200">
 
+#### Feedback:
+> To any recruiters, designers, and mobile developers: I would love to get your feedback on the app if you have time to download and review it.
+> Link to feedback form -> [Google Form](https://docs.google.com/forms/d/e/1FAIpQLSeGdOhLemsSRxaDm2d8jKEAeQMF_GnBLnckuZwUc2zCFyRJfQ/viewform)
+
 Enjoy !!!
 ~ Yaw
