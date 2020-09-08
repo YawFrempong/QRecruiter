@@ -65,7 +65,7 @@ public class ListViewAdapter extends ArrayAdapter<String> implements Filterable 
             checkBox.setChecked(false);
         }
         
-        //hide or show checkboxes, and pencil based on whether delete, edit, or neither is selected
+        //hide or show checkboxes and pencil based on whether delete, edit, or neither is selected
         if(ListActivity.deleteSelected && !ListActivity.editSelected){
             checkBox.setVisibility(View.VISIBLE);
         }
@@ -77,7 +77,7 @@ public class ListViewAdapter extends ArrayAdapter<String> implements Filterable 
             img_edit.setVisibility(View.GONE);
         }
         
-        //detect when the current checkbox is toggled update dependent variables
+        //detect when the current checkbox is toggled and update dependent variables
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -133,7 +133,7 @@ public class ListViewAdapter extends ArrayAdapter<String> implements Filterable 
         }
     };
     
-    //handle input text for renaming the event(make sure input text is valid & no duplicate events) & update listview and dependent variables
+    //handle input text for renaming the event(make sure input text is valid & no duplicate events) and update listview & dependent variables
     private void showEditItemDialog(Context c, String clicked_name) {
         final EditText taskEditText = new EditText(c);
         taskEditText.setSingleLine(true);
