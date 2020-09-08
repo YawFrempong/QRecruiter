@@ -48,7 +48,7 @@ public class ListViewAdapter2 extends ArrayAdapter<String> {
         this.favList.putAll(favList);
     }
     
-    //for every list element set the label name and favorite star
+    //customize each element in the listview
     @NonNull
     @Override
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent){
