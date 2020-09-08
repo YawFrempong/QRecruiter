@@ -96,7 +96,7 @@ public class ListViewAdapter2 extends ArrayAdapter<String> {
             img_star.setVisibility(View.VISIBLE);
         }
         
-        //detect when the current checkbox is toggled update dependent variables
+        //detect when the current checkbox is toggled and update dependent variables
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -111,7 +111,7 @@ public class ListViewAdapter2 extends ArrayAdapter<String> {
             }
         });
         
-        //detect when the current star is toggled and update listview appearance and dependent variables
+        //detect when the current star is toggled and update listview appearance & dependent variables
         img_star.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -204,7 +204,7 @@ public class ListViewAdapter2 extends ArrayAdapter<String> {
         }
     };
     
-    //handle input text for renaming the profile(make sure input text is valid & no duplicate profiles) & update listview and dependent variables
+    //handle input text for renaming the profile(make sure input text is valid & no duplicate profiles) and update listview & dependent variables
     private void showEditItemDialog(Context c, String clicked_name) {
         final EditText taskEditText = new EditText(c);
         taskEditText.setSingleLine(true);
