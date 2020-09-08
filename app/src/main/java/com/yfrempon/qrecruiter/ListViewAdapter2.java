@@ -57,7 +57,7 @@ public class ListViewAdapter2 extends ArrayAdapter<String> {
         View row = inflater.inflate(R.layout.row_item_2,parent, false);
         
         //store activity content in variables
-        //set labels, checkbox location, and favorite status
+        //set labels, favorite status, and checkbox/edit button location
         TextView label = row.findViewById(R.id.txtName);
         label.setText(labels.get(position));
         checkBox = row.findViewById(R.id.checkBox);
@@ -81,7 +81,7 @@ public class ListViewAdapter2 extends ArrayAdapter<String> {
             checkBox.setChecked(false);
         }
         
-        //hide or show stars, checkboxes, trash cans based on whether delete, edit, or neither is selected
+        //hide or show stars, checkboxes, and pencil based on whether delete, edit, or neither is selected
         if(deleteSelected && !EventActivity.editSelected){
             checkBox.setVisibility(View.VISIBLE);
             img_star.setVisibility(View.GONE);
@@ -111,7 +111,7 @@ public class ListViewAdapter2 extends ArrayAdapter<String> {
             }
         });
         
-         //detect when the current star is toggled and update listview appearance and dependent variables
+        //detect when the current star is toggled and update listview appearance and dependent variables
         img_star.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -171,9 +171,11 @@ public class ListViewAdapter2 extends ArrayAdapter<String> {
     }
     
     //filter list items based on search query and update list
+    @Override
     public Filter getFilter() {
         return exampleFilter;
     }
+    
     private Filter exampleFilter = new Filter() {
         @Override
         protected FilterResults performFiltering(CharSequence constraint) {
@@ -208,6 +210,7 @@ public class ListViewAdapter2 extends ArrayAdapter<String> {
         taskEditText.setSingleLine(true);
         taskEditText.setLines(1);
         taskEditText.setMaxLines(1);
+        
         final AlertDialog dialog = new AlertDialog.Builder(c)
             .setTitle("Rename profile")
             .setMessage("Give a new name: ")
@@ -222,15 +225,19 @@ public class ListViewAdapter2 extends ArrayAdapter<String> {
                         String prev_val_name2link = EventActivity.name2link.get(clicked_name);
                         EventActivity.name2link.put(m_Text, prev_val_name2link);
                         EventActivity.name2link.remove(clicked_name);
+                        
                         for(int i = 0; i < EventActivity.names.size(); i++){
                             if(EventActivity.names.get(i).equals(clicked_name)){
                                 EventActivity.names.set(i, m_Text);
                             }
                         }
+                        
                         ArrayList<String> temp_names = new ArrayList<>();
+                        
                         for(int i = 0; i < EventActivity.names.size(); i++){
                             temp_names.add(EventActivity.names.get(i).toString());
                         }
+                        
                         labels = (List<String>) temp_names.clone();
                         String prev_val_fav = favList.get(clicked_name);
                         favList.put(m_Text, prev_val_fav);
